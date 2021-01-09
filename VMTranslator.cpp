@@ -5,30 +5,88 @@ using namespace std;
 #include <fstream>
 #include <string>
 
+#define C_ARITHMETIC 0
+#define C_PUSH 1
+#define C_POP 2
+#define C_LABEL 3
+#define C_GOTO 4
+#define C_IF 5
+#define C_FUNCTION 6
+#define C_RETURN 7
+#define C_CALL 8
+
 class Parser {
 public:
-    Parser(fstream &inputFile) {
-
+    fstream inputFile;
+    string currentLine;
+    Parser(string inputFile_path) {
+        cout << "Parser initialized!" << endl;
+        this->inputFile.open(inputFile_path);
+        if (!inputFile.is_open()) {
+            cerr << "Error! VM file(" << inputFile_path << ") can not be opened! (Parser)" << endl;
+            return;
+        }
+        cout << "\tParser opened the VM file, it is ready!\n" << endl;
     }
 
     bool hasMoreCommands() {
-
+        if (this->inputFile.eof() != true)
+            return true;
+        return false;
     }
 
-    string advance() {
-
+    void advance() {
+        getline(this->inputFile, this->currentLine);        
     }
 
     int commandType() {
 
+        if(this->currentLine.find(" ") == string::npos && this->currentLine.length() <=3)
+            return C_ARITHMETIC;
+        if (this->currentLine == "return")
+            return C_RETURN;
+
+        string cmd = this->currentLine.substr(0, this->currentLine.find(" "));
+        /*if (cmd == "or" || cmd == "and" || cmd == "lt" || cmd == "gt")
+            return C_ARITHMETIC;*/
+        if (cmd == "push")
+            return C_PUSH;
+        if (cmd == "pop")
+            return C_POP;
+        if (cmd == "label")
+            return C_LABEL;
+        if (cmd == "goto")
+            return C_GOTO;
+        if (cmd == "if")
+            return C_IF;
+        if (cmd == "function")
+            return C_FUNCTION;
+        /*if (cmd == "return")
+            return C_RETURN;*/
+        if (cmd == "call")
+            return C_CALL;
+
+        cerr << "Error! The type of CMD can not be detected..." << endl;
+        return false;
+
     }
 
     string arg1() {
-
+        if (this->commandType() == C_RETURN)
+            return NULL;
+        if (this->commandType() == C_ARITHMETIC)
+            return this->currentLine;
+        int firstSpace = this->currentLine.find_first_of(" ");
+        int lastSpace = this->currentLine.find_last_of(" ");
+        return this->currentLine.substr(firstSpace+1, lastSpace-firstSpace);
     }
 
     string arg2() {
+        if (this->commandType() != C_PUSH && this->commandType() != C_POP && this->commandType() != C_FUNCTION && this->commandType() != C_CALL)
+            return NULL;
 
+        int lastSpace = this->currentLine.find_last_of(" ");
+        return this->currentLine.substr(lastSpace+1, this->currentLine.length()-lastSpace);
     }
 };
 
@@ -46,7 +104,7 @@ int main()
         return 0;
     }
     //Clean the file, get rid of comments.
-    //Normally, this process is done by Parser component.
+    //Normally, this process is done by Parser component. (DIFF 0)
     //I prefered this method.
     cout << "VM file(" << vmFile_fileName << ") is being initialized...\n" << endl;
     cout << "VM file will be re-organized...\n\tComments & empty lines will be removed...\n" << endl;
@@ -78,8 +136,13 @@ int main()
     vmFile.close();
     cout << "Re-organized VM file(" << vmFile_fileName << ") created successfully!\n" << endl;
 
-    fstream inputFile;
-    inputFile.open("~tmpVM.vm");
+    Parser parser = Parser("~tmpVM.vm");
+    bool state = parser.hasMoreCommands();
+    parser.advance();
+    cout << parser.currentLine << endl;
+    cout << parser.commandType() << endl;
+    cout << parser.arg1() << endl;
+    cout << parser.arg2() << endl;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
