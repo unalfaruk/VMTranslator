@@ -15,6 +15,17 @@ using namespace std;
 #define C_RETURN 7
 #define C_CALL 8
 
+//The addr which holding of THE BASE ADDR of MEMORY SEGMENTS
+#define LCL 1 //local
+#define ARG 2 //argument
+#define THIS 3 //this
+#define THAT 4 //that
+
+//Directly base addr
+#define TEMP 5 //temp 5-12
+
+
+
 class Parser {
 public:
     fstream inputFile;
@@ -36,7 +47,7 @@ public:
     }
 
     void advance() {
-        getline(this->inputFile, this->currentLine);        
+        getline(this->inputFile, this->currentLine);
     }
 
     int commandType() {
@@ -81,12 +92,70 @@ public:
         return this->currentLine.substr(firstSpace+1, lastSpace-firstSpace);
     }
 
-    string arg2() {
+    int arg2() {
         if (this->commandType() != C_PUSH && this->commandType() != C_POP && this->commandType() != C_FUNCTION && this->commandType() != C_CALL)
             return NULL;
 
         int lastSpace = this->currentLine.find_last_of(" ");
-        return this->currentLine.substr(lastSpace+1, this->currentLine.length()-lastSpace);
+        return stoi(this->currentLine.substr(lastSpace+1, this->currentLine.length()-lastSpace));
+    }
+};
+
+class CodeWriter {
+public:
+    /**
+     * @brief Opens the output file
+     * @param outputFile_path File path for the output file
+    */
+    ofstream outputFile;
+    CodeWriter(string outputFile_path) {        
+        this->outputFile.open(outputFile_path);
+        if (!outputFile.is_open()) {
+            cerr << "Error! Output file can not be created!" << endl;
+            return;
+        }
+        cout << "The output file(" << outputFile_path << ") created successfully!\n" << endl;
+    }
+
+    /**
+     * @brief Writes to the output file the assembly code that implements the given art. comm.
+     * @param command VM command
+    */
+    void writeArithmetic(string command) {
+        string ASM = "";
+        if (command == "add") {
+            ASM = "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D+M\nM=D\n@SP\nM=M+1";
+        }
+        this->outputFile << ASM << endl;
+    }
+
+    /**
+     * @brief Writes to the output file the assembly code that implements the given comm. where comm. is either push or pop
+     * @param cmdType C_PUSH or C_POP
+     * @param segment local, argument, this, that
+     * @param index non-negative number
+    */
+    void WritePushPop(int cmdType, string segment, int index) {
+        string ASM = "";
+        if (cmdType == C_POP) {
+
+        }
+
+        if (cmdType == C_PUSH) {            
+            ASM = "@" + to_string(index) + "\n";
+            ASM = ASM + "D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1";
+        }
+        
+        this->outputFile << ASM << endl;       
+    }
+
+    /**
+     * @brief Close the output file
+    */
+    void Close() {
+        string END = "(ENDING)\n@ENDING\n0;JMP";
+        this->outputFile << END;
+        this->outputFile.close();
     }
 };
 
@@ -121,28 +190,44 @@ int main()
     }
 
     while (getline(vmFile, line)) {
+        if (lineCounter > 0)
+            tmpVM << "\n";
         //Ignore comment lines and empty lines
-        if (line.substr(0, 2) == "//" || line == "")
+        if (line.substr(0, 2) == "//" || line == "\n" || line.empty())
             continue;
         //If there is a comment at end of the line, remove it
         if (line.find("//") != string::npos)
             line.replace(line.find("//"), line.length() - line.find("//"), "");
 
         lineCounter++;
-
-        tmpVM << line << endl;
+        tmpVM << line;
     }
     tmpVM.close();
     vmFile.close();
     cout << "Re-organized VM file(" << vmFile_fileName << ") created successfully!\n" << endl;
 
     Parser parser = Parser("~tmpVM.vm");
-    bool state = parser.hasMoreCommands();
+    //For debug
+    /*bool state = parser.hasMoreCommands();
     parser.advance();
     cout << parser.currentLine << endl;
     cout << parser.commandType() << endl;
     cout << parser.arg1() << endl;
-    cout << parser.arg2() << endl;
+    cout << parser.arg2() << endl;*/
+    CodeWriter codeWriter = CodeWriter("output.asm");
+    while (parser.hasMoreCommands()) {
+        parser.advance();
+        if (parser.commandType() == C_POP || parser.commandType() == C_PUSH) {
+            codeWriter.WritePushPop(parser.commandType(),parser.arg1(),parser.arg2());
+            continue;
+        }
+
+        if (parser.commandType() == C_ARITHMETIC) {
+            codeWriter.writeArithmetic(parser.arg1());
+            continue;
+        }
+    }
+    codeWriter.Close();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
