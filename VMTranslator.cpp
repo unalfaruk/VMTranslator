@@ -124,7 +124,45 @@ public:
     void writeArithmetic(string command) {
         string ASM = "";
         if (command == "add") {
-            ASM = "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nD=D+M\nM=D\n@SP\nM=M+1";
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n"
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=D+M\n"
+                "M=D\n"
+                "@SP\n"
+                "M=M+1";
+        }
+        if (command == "eq") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n"
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "M=D-M\n"
+                "@SP\n"
+                "A=M\n"
+                "D=M\n"
+                "@IFTRUE\n"
+                "D;JEQ\n"
+                "@SP\n"
+                "A=M\n"
+                "M=0\n"
+                "@SP\n"
+                "M=M+1\n"
+                "@ENDING\n"
+                "0;JMP\n"
+                "(IFTRUE)\n"
+                "@SP\n"
+                "A=M\n"
+                "M=1\n"
+                "@SP\n"
+                "M=M+1";
         }
         this->outputFile << ASM << endl;
     }
@@ -166,7 +204,7 @@ int main()
 
     //Open VM file first.
     fstream vmFile;
-    string vmFile_fileName = "SimpleAdd.vm";
+    string vmFile_fileName = "StackTest.vm";
     vmFile.open(vmFile_fileName);
     if (!vmFile.is_open()) {
         cout << "Error! VM file(" << vmFile_fileName << ") can not be opened!" << endl;
@@ -190,6 +228,8 @@ int main()
     }
 
     while (getline(vmFile, line)) {
+        //This control for preventing empty lines
+        //We add next line character to the beginning of each line except first one
         if (lineCounter > 0)
             tmpVM << "\n";
         //Ignore comment lines and empty lines
