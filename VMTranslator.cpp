@@ -108,6 +108,7 @@ public:
      * @param outputFile_path File path for the output file
     */
     ofstream outputFile;
+    int jumpVariableCounter = 0; //Generating different labels for each branch conditions
     CodeWriter(string outputFile_path) {        
         this->outputFile.open(outputFile_path);
         if (!outputFile.is_open()) {
@@ -122,7 +123,7 @@ public:
      * @param command VM command
     */
     void writeArithmetic(string command) {
-        string ASM = "";
+        string ASM = "";        
         if (command == "add") {
             ASM = "@SP\n"
                 "M=M-1\n"
@@ -136,6 +137,10 @@ public:
                 "@SP\n"
                 "M=M+1";
         }
+        /**
+         * @brief This command take substraction of two numbers, if the result is 0, they equals each other.
+         * @param command 
+        */
         if (command == "eq") {
             ASM = "@SP\n"
                 "M=M-1\n"
@@ -148,23 +153,60 @@ public:
                 "@SP\n"
                 "A=M\n"
                 "D=M\n"
-                "@IFTRUE\n"
+                "@IFEQ." + to_string(this->jumpVariableCounter) + "\n"
                 "D;JEQ\n"
                 "@SP\n"
                 "A=M\n"
                 "M=0\n"
                 "@SP\n"
                 "M=M+1\n"
-                "@ENDING\n"
+                "@CONT." + to_string(this->jumpVariableCounter) + "\n"
                 "0;JMP\n"
-                "(IFTRUE)\n"
+                "(IFEQ." + to_string(this->jumpVariableCounter) + ")\n"
                 "@SP\n"
                 "A=M\n"
                 "M=1\n"
                 "@SP\n"
-                "M=M+1";
+                "M=M+1\n"
+                "(CONT." + to_string(this->jumpVariableCounter) + ")";
+        }
+        /**
+         * @brief 
+         * 1st element of the stack is "a"
+         * 2nd elements of the stack is "b"
+         * If a<b, then b>a (b-a>0)
+         * So this function check if "b" is bigger than "a" or not.
+         * @param command 
+        */
+        if (command == "lt") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=b
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                //"D=D-M\n" //D=b-a Why it is not working???
+                "M=D-M\n"
+                "@IFLT." + to_string(this->jumpVariableCounter) + "\n"
+                "M;JGT\n"
+                "@SP\n"
+                "A=M\n"
+                "M=0\n"
+                "@SP\n"
+                "M=M+1\n"
+                "@CONT." + to_string(this->jumpVariableCounter) + "\n"
+                "0;JMP\n"
+                "(IFLT." + to_string(this->jumpVariableCounter) + ")\n"
+                "@SP\n"
+                "A=M\n"
+                "M=1\n"
+                "@SP\n"
+                "M=M+1\n"
+                "(CONT." + to_string(this->jumpVariableCounter) + ")";
         }
         this->outputFile << ASM << endl;
+        this->jumpVariableCounter++;
     }
 
     /**
