@@ -175,7 +175,7 @@ public:
          * 1st element of the stack is "a"
          * 2nd elements of the stack is "b"
          * If a<b, then b>a (b-a>0)
-         * So this function check if "b" is bigger than "a" or not.
+         * So this function check if "b" is greater than "a" or not.
          * @param command 
         */
         if (command == "lt") {
@@ -187,9 +187,10 @@ public:
                 "M=M-1\n"
                 "A=M\n"
                 //"D=D-M\n" //D=b-a Why it is not working???
-                "M=D-M\n"
+                "M=D-M\n" //M=b-a
+                "D=M\n" //D=M
                 "@IFLT." + to_string(this->jumpVariableCounter) + "\n"
-                "M;JGT\n"
+                "D;JGT\n"
                 "@SP\n"
                 "A=M\n"
                 "M=0\n"
@@ -205,6 +206,43 @@ public:
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
         }
+        /**
+         * @brief
+         * 1st element of the stack is "a"
+         * 2nd elements of the stack is "b"
+         * If a>b, then b<a (b-a<0)
+         * So this function check if "b" is less than "a" or not.
+         * @param command
+        */
+        if (command == "gt") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=b
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                //"D=D-M\n" //D=b-a Why it is not working???
+                "M=D-M\n" //M=b-a
+                "D=M\n" //D=M
+                "@IFGT." + to_string(this->jumpVariableCounter) + "\n"
+                "D;JLT\n" //If b-a<0
+                "@SP\n"
+                "A=M\n"
+                "M=0\n"
+                "@SP\n"
+                "M=M+1\n"
+                "@CONT." + to_string(this->jumpVariableCounter) + "\n"
+                "0;JMP\n"
+                "(IFGT." + to_string(this->jumpVariableCounter) + ")\n"
+                "@SP\n"
+                "A=M\n"
+                "M=1\n"
+                "@SP\n"
+                "M=M+1\n"
+                "(CONT." + to_string(this->jumpVariableCounter) + ")";
+        }
+
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
     }
