@@ -259,7 +259,6 @@ public:
                 "M=M-1\n"
                 "A=M\n"
                 "M=M-D\n" //M=a-b
-                "D=M\n"
                 "@SP\n"
                 "M=M+1\n";
         }
