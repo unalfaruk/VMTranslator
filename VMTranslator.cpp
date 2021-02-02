@@ -124,18 +124,22 @@ public:
     */
     void writeArithmetic(string command) {
         string ASM = "";        
+        /**
+         * @brief Sum last two numbers of stack, a=a+b
+         * @param command
+        */
         if (command == "add") {
             ASM = "@SP\n"
                 "M=M-1\n"
                 "A=M\n"
-                "D=M\n"
+                "D=M\n" //D=b
                 "@SP\n"
                 "M=M-1\n"
                 "A=M\n"
-                "D=D+M\n"
-                "M=D\n"
+                "M=D+M\n" //M=a+b
+                "D=M\n"
                 "@SP\n"
-                "M=M+1";
+                "M=M+1\n";
         }
         /**
          * @brief This command take substraction of two numbers, if the result is 0, they equals each other.
@@ -226,7 +230,7 @@ public:
                 "M=D-M\n" //M=b-a
                 "D=M\n" //D=M
                 "@IFGT." + to_string(this->jumpVariableCounter) + "\n"
-                "D;JLT\n" //If b-a<0
+                "D;JLT\n" //Check if b-a<0 condition
                 "@SP\n"
                 "A=M\n"
                 "M=0\n"
@@ -234,14 +238,14 @@ public:
                 "M=M+1\n"
                 "@CONT." + to_string(this->jumpVariableCounter) + "\n"
                 "0;JMP\n"
-                "(IFGT." + to_string(this->jumpVariableCounter) + ")\n"
+                "(IFGT." + to_string(this->jumpVariableCounter) + ")\n" //If b-a<0 true (If GT is true)
                 "@SP\n"
                 "A=M\n"
                 "M=1\n"
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
-        }
+        }        
 
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
