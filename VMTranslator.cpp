@@ -262,6 +262,32 @@ public:
                 "@SP\n"
                 "M=M+1\n";
         }
+        /**
+         * @brief Check if the last value less than zero (a=1 if a<0)
+         * @param command 
+        */
+        if (command == "neg") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=a     
+                "@IFNEG." + to_string(this->jumpVariableCounter) + "\n"
+                "D;JLT\n" //Check if a<0 condition
+                "@SP\n"
+                "A=M\n"
+                "M=0\n"
+                "@SP\n"
+                "M=M+1\n"
+                "@CONT." + to_string(this->jumpVariableCounter) + "\n"
+                "0;JMP\n"
+                "(IFNEG." + to_string(this->jumpVariableCounter) + ")\n" //If a<0 true (If a is negative number)
+                "@SP\n"
+                "A=M\n"
+                "M=1\n"
+                "@SP\n"
+                "M=M+1\n"
+                "(CONT." + to_string(this->jumpVariableCounter) + ")";
+        }
 
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
