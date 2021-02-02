@@ -288,6 +288,23 @@ public:
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
         }
+        /**
+         * @brief And operand of last two numbers of stack, a=a&b
+         * @param command
+        */
+        if (command == "and") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=b
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "M=M&D\n" //M=a-b
+                "@SP\n"
+                "M=M+1\n";
+        }
+
 
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
