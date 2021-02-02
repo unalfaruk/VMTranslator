@@ -137,7 +137,7 @@ public:
                 "M=M-1\n"
                 "A=M\n"
                 "M=D+M\n" //M=a+b
-                "D=M\n"
+                //"D=M\n"
                 "@SP\n"
                 "M=M+1\n";
         }
@@ -245,7 +245,24 @@ public:
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
-        }        
+        }
+        /**
+         * @brief Substraction of last two numbers of stack, a=a-b
+         * @param command
+        */
+        if (command == "sub") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=b
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "M=M-D\n" //M=a-b
+                "D=M\n"
+                "@SP\n"
+                "M=M+1\n";
+        }
 
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
