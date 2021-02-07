@@ -169,7 +169,7 @@ public:
                 "(IFEQ." + to_string(this->jumpVariableCounter) + ")\n"
                 "@SP\n"
                 "A=M\n"
-                "M=1\n"
+                "M=-1\n"
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
@@ -205,7 +205,7 @@ public:
                 "(IFLT." + to_string(this->jumpVariableCounter) + ")\n"
                 "@SP\n"
                 "A=M\n"
-                "M=1\n"
+                "M=-1\n"
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
@@ -241,7 +241,7 @@ public:
                 "(IFGT." + to_string(this->jumpVariableCounter) + ")\n" //If b-a<0 true (If GT is true)
                 "@SP\n"
                 "A=M\n"
-                "M=1\n"
+                "M=-1\n"
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
