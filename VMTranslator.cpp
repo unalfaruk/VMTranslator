@@ -270,6 +270,17 @@ public:
             ASM = "@SP\n"
                 "M=M-1\n"
                 "A=M\n"
+                "D=M\n" //D=a
+                "@SP\n"
+                "A=M\n"
+                "M=-D\n" //a=-a
+                "@SP\n"
+                "M=M+1\n";
+        }
+        /*if (command == "neg") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
                 "D=M\n" //D=a     
                 "@IFNEG." + to_string(this->jumpVariableCounter) + "\n"
                 "D;JLT\n" //Check if a<0 condition
@@ -287,7 +298,7 @@ public:
                 "@SP\n"
                 "M=M+1\n"
                 "(CONT." + to_string(this->jumpVariableCounter) + ")";
-        }
+        }*/
         /**
          * @brief And operand of last two numbers of stack, a=a&b
          * @param command
@@ -300,11 +311,41 @@ public:
                 "@SP\n"
                 "M=M-1\n"
                 "A=M\n"
-                "M=M&D\n" //M=a-b
+                "M=D&M\n" //M=a&b
                 "@SP\n"
                 "M=M+1\n";
         }
-
+        /**
+         * @brief Or operand of last two numbers of stack, a=a|b
+         * @param command
+        */
+        if (command == "or") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=b
+                "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "M=D|M\n" //M=a|b
+                "@SP\n"
+                "M=M+1\n";
+        }
+        /**
+         * @brief Not of last number of stack, a=!a
+         * @param command
+        */
+        if (command == "not") {
+            ASM = "@SP\n"
+                "M=M-1\n"
+                "A=M\n"
+                "D=M\n" //D=a
+                "@SP\n"
+                "A=M\n"
+                "M=!D\n" //a=!a
+                "@SP\n"
+                "M=M+1\n";
+        }
 
         this->outputFile << ASM << endl;
         this->jumpVariableCounter++;
