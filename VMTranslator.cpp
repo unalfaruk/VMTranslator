@@ -108,13 +108,15 @@ public:
      * @param outputFile_path File path for the output file
     */
     ofstream outputFile;
+    string fileName;
     int jumpVariableCounter = 0; //Generating different labels for each branch conditions
-    CodeWriter(string outputFile_path) {        
+    CodeWriter(string outputFile_path) {       
         this->outputFile.open(outputFile_path);
         if (!outputFile.is_open()) {
             cerr << "Error! Output file can not be created!" << endl;
             return;
         }
+        this->fileName = outputFile_path.erase(outputFile_path.size() - 4);
         cout << "The output file(" << outputFile_path << ") created successfully!\n" << endl;
     }
 
@@ -139,7 +141,7 @@ public:
                 "M=D+M\n" //M=a+b
                 //"D=M\n"
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
         /**
          * @brief This command take substraction of two numbers, if the result is 0, they equals each other.
@@ -260,7 +262,7 @@ public:
                 "A=M\n"
                 "M=M-D\n" //M=a-b
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
         /**
          * @brief Check if the last value less than zero (a=1 if a<0)
@@ -275,7 +277,7 @@ public:
                 "A=M\n"
                 "M=-D\n" //a=-a
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
         /*if (command == "neg") {
             ASM = "@SP\n"
@@ -313,7 +315,7 @@ public:
                 "A=M\n"
                 "M=D&M\n" //M=a&b
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
         /**
          * @brief Or operand of last two numbers of stack, a=a|b
@@ -329,7 +331,7 @@ public:
                 "A=M\n"
                 "M=D|M\n" //M=a|b
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
         /**
          * @brief Not of last number of stack, a=!a
@@ -344,7 +346,7 @@ public:
                 "A=M\n"
                 "M=!D\n" //a=!a
                 "@SP\n"
-                "M=M+1\n";
+                "M=M+1";
         }
 
         this->outputFile << ASM << endl;
@@ -354,19 +356,144 @@ public:
     /**
      * @brief Writes to the output file the assembly code that implements the given comm. where comm. is either push or pop
      * @param cmdType C_PUSH or C_POP
-     * @param segment local, argument, this, that
+     * @param segment: local, argument, this, that
      * @param index non-negative number
     */
     void WritePushPop(int cmdType, string segment, int index) {
+        segment.pop_back();
+        string addrLabel = "";
         string ASM = "";
-        if (cmdType == C_POP) {
 
+        if (segment == "local")
+        {
+            addrLabel == "LCL";
+        }
+        if (segment == "argument")
+        {
+            addrLabel == "ARG";
+        }
+        if (segment == "this")
+        {
+            addrLabel == "THIS";
+        }
+        if (segment == "this")
+        {
+            addrLabel == "THAT";
+        }
+        //segment is one of {local,argument,this,that}
+        if (addrLabel != "") {
+            // pop segment i 
+            if (cmdType == C_POP) {
+                ASM = "@SP\n"
+                    "M=M-1\n"
+                    "A=M\n"
+                    "D=M\n"
+                    "@" + addrLabel + "\n"
+                    "A=M+" + to_string(index) + "\n"
+                    "M=D";
+            }
+
+            //push segment i
+            if (cmdType == C_PUSH) {
+                ASM = "@" + addrLabel + "\n"
+                    "A=M+"+ to_string(index) +"\n"
+                    "D=M\n"
+                    "@SP\n"
+                    "A=M\n"
+                    "M=D\n"
+                    "@SP\n"
+                    "M=M+1";
+            }
         }
 
-        if (cmdType == C_PUSH) {            
-            ASM = "@" + to_string(index) + "\n";
-            ASM = ASM + "D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1";
+        if (segment == "static") {
+            // pop static i 
+            if (cmdType == C_POP) {
+                ASM = "@SP\n"
+                    "M=M-1\n"
+                    "A=M\n"
+                    "D=M\n"
+                    "@" + this->fileName + to_string(index) + "\n"
+                    "A=M\n"
+                    "M=D";
+            }
+
+            //push static i
+            if (cmdType == C_PUSH) {
+                ASM = "@" + this->fileName + to_string(index) + "\n"
+                    "A=M\n"
+                    "D=M\n"
+                    "@SP\n"
+                    "A=M\n"
+                    "M=D\n"
+                    "@SP\n"
+                    "M=M+1";
+            }            
         }
+
+        if (segment == "temp") {
+            // pop temp i 
+            if (cmdType == C_POP) {
+                ASM = "@SP\n"
+                    "M=M-1\n"
+                    "A=M\n"
+                    "D=M\n"
+                    "@" + to_string(index + 5) + "\n"
+                    "M=D";
+            }
+
+            //push temp i
+            if (cmdType == C_PUSH) {
+                ASM = "@" + to_string(index+5) + "\n"
+                    "D=M\n"
+                    "@SP\n"
+                    "A=M\n"
+                    "M=D\n"
+                    "@SP\n"
+                    "M=M+1";
+            }
+        }
+
+        if (segment == "pointer") {
+            // pop pointer i
+            string THISorTHAT = "";
+            if (index == 0)
+                THISorTHAT = "THIS";
+            else
+                THISorTHAT = "THAT";
+
+            if (cmdType == C_POP) {
+                ASM = "@SP\n"
+                    "M=M-1\n"
+                    "A=M\n"
+                    "D=M\n"
+                    "@" + THISorTHAT + "\n"
+                    "M=D";
+            }
+
+            //push pointer i
+            if (cmdType == C_PUSH) {
+                ASM = "@" + THISorTHAT + "\n"
+                    "D=M\n"
+                    "@SP\n"
+                    "A=M\n"
+                    "M=D\n"
+                    "@SP\n"
+                    "M=M+1";
+            }
+        }
+
+        if (segment == "constant") {
+            //segment == constant
+            if (cmdType == C_POP) {
+                //No POP for constant
+            }
+
+            if (cmdType == C_PUSH) {
+                ASM = "@" + to_string(index) + "\n";
+                ASM = ASM + "D=A\n@SP\nA=M\nM=D\n@SP\nM=M+1";
+            }
+        }       
         
         this->outputFile << ASM << endl;       
     }
