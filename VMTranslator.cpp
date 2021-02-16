@@ -4,6 +4,7 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stdio.h>
 
 #define C_ARITHMETIC 0
 #define C_PUSH 1
@@ -116,8 +117,9 @@ public:
             cerr << "Error! Output file can not be created!" << endl;
             return;
         }
-        this->fileName = outputFile_path.erase(outputFile_path.size() - 4);
         cout << "The output file(" << outputFile_path << ") created successfully!\n" << endl;
+        this->fileName = outputFile_path.erase(outputFile_path.size() - 4);
+        
     }
 
     /**
@@ -366,37 +368,46 @@ public:
 
         if (segment == "local")
         {
-            addrLabel == "LCL";
+            addrLabel = "LCL";
         }
         if (segment == "argument")
         {
-            addrLabel == "ARG";
+            addrLabel = "ARG";
         }
         if (segment == "this")
         {
-            addrLabel == "THIS";
+            addrLabel = "THIS";
         }
-        if (segment == "this")
+        if (segment == "that")
         {
-            addrLabel == "THAT";
+            addrLabel = "THAT";
         }
         //segment is one of {local,argument,this,that}
         if (addrLabel != "") {
             // pop segment i 
             if (cmdType == C_POP) {
-                ASM = "@SP\n"
+                ASM = "@" + addrLabel + "\n"
+                    "D=M\n"
+                    "@" + to_string(index) + "\n"
+                    "D=D+A\n"
+                    "@TMPHOLDER\n"
+                    "M=D\n"
+                    "@SP\n"
                     "M=M-1\n"
                     "A=M\n"
                     "D=M\n"
-                    "@" + addrLabel + "\n"
-                    "A=M+" + to_string(index) + "\n"
+                    "@TMPHOLDER\n"
+                    "A=M\n"
                     "M=D";
             }
 
             //push segment i
             if (cmdType == C_PUSH) {
                 ASM = "@" + addrLabel + "\n"
-                    "A=M+"+ to_string(index) +"\n"
+                    "D=M\n"
+                    "@"+ to_string(index) +"\n"
+                    "D=D+A\n"
+                    "A=D\n"
                     "D=M\n"
                     "@SP\n"
                     "A=M\n"
@@ -508,14 +519,27 @@ public:
     }
 };
 
-int main()
+int main(int argc, char* argv[])
 {
     cout << "Welcome to VM Translator!" << endl;
     cout << "\tby UNAL, Faruk\n" << endl;
 
+    // Check the number of parameters
+    if (argc != 2) {
+        // Tell the user how to run the program
+        std::cerr << "Usage: " << argv[0] << " fileName.vm" << std::endl;
+        /* "Usage messages" are a conventional way of telling the user
+         * how to run a program if they enter the command incorrectly.
+         */
+        return 1;
+    }
+
+    std::cout << argv[1] << " will be translated into Hack(ASM) language!\n" << std::endl;
+
     //Open VM file first.
     fstream vmFile;
-    string vmFile_fileName = "StackTest.vm";
+    //string vmFile_fileName = "StackTest.vm";
+    string vmFile_fileName = argv[1];
     vmFile.open(vmFile_fileName);
     if (!vmFile.is_open()) {
         cout << "Error! VM file(" << vmFile_fileName << ") can not be opened!" << endl;
@@ -557,7 +581,7 @@ int main()
     vmFile.close();
     cout << "Re-organized VM file(" << vmFile_fileName << ") created successfully!\n" << endl;
 
-    Parser parser = Parser("~tmpVM.vm");
+    Parser parser("~tmpVM.vm");
     //For debug
     /*bool state = parser.hasMoreCommands();
     parser.advance();
@@ -565,7 +589,9 @@ int main()
     cout << parser.commandType() << endl;
     cout << parser.arg1() << endl;
     cout << parser.arg2() << endl;*/
-    CodeWriter codeWriter = CodeWriter("output.asm");
+    string asmFile_fileName = vmFile_fileName;
+    asmFile_fileName.replace(asmFile_fileName.find("vm"),2,"asm");
+    CodeWriter codeWriter = CodeWriter(asmFile_fileName);
     while (parser.hasMoreCommands()) {
         parser.advance();
         if (parser.commandType() == C_POP || parser.commandType() == C_PUSH) {
@@ -579,6 +605,14 @@ int main()
         }
     }
     codeWriter.Close();
+    
+    parser.inputFile.close();
+    if (remove("~tmpVM.vm") == 0)
+        cout << "Temp files deleted successfully!\n" << endl;
+    else        
+        std::cerr << "Unable to delete the temp files." << std::endl;
+
+    return 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
