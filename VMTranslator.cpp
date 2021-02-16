@@ -424,15 +424,15 @@ public:
                     "M=M-1\n"
                     "A=M\n"
                     "D=M\n"
-                    "@" + this->fileName + to_string(index) + "\n"
-                    "A=M\n"
+                    "@" + this->fileName + "." + to_string(index) + "\n"
+                    //"A=M\n"
                     "M=D";
             }
 
             //push static i
             if (cmdType == C_PUSH) {
-                ASM = "@" + this->fileName + to_string(index) + "\n"
-                    "A=M\n"
+                ASM = "@" + this->fileName + "." + to_string(index) + "\n"
+                    //"A=M\n"
                     "D=M\n"
                     "@SP\n"
                     "A=M\n"
